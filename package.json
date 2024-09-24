@@ -1,7 +1,7 @@
 {
-  "name": "patchbay",
+  "name": "patchbay.js",
   "version": "1.0.0",
-  "description": "A physics-based rope simulation library for creating virtual patchbay visualizations",
+  "description": "A physics-based rope simulation library for connecting DOM elements.",
   "keywords": [
     "patchbay",
     "rope",
