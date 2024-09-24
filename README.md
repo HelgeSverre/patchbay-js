@@ -1,5 +1,8 @@
 # Patchbay.js
 
+
+![Patchbay.js](./art/demo.gif)
+
 JavaScript library for creating interactive physics-based rope simulations connected to DOM
 elements.
 
