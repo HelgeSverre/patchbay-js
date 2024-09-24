@@ -24,7 +24,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "format": "npx prettier --write .",
+    "format": "npx prettier --write src examples",
     "preview": "vite preview",
     "sort": "npx sort-package-json"
   },

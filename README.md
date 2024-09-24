@@ -13,6 +13,9 @@ by [Reason Studio's Rack](https://www.reasonstudios.com/rack#:~:text=hear%20what
 
 ```shell
 npm install patchbay.js
+
+# Or with yarn
+yarn add patchbay.js
 ```
 
 ## Configuration Options
@@ -93,6 +96,21 @@ To set up the development environment:
 1. Clone the repository
 2. Run `npm install` to install dependencies
 3. Run `npm run build` to build the library for production
+
+```shell
+git clone git@github.com:HelgeSverre/patchbay-js.git
+cd patchbay-js
+npm install
+npm run build
+```
+
+### Formatting
+
+This project uses [Prettier](https://prettier.io/) for code formatting. To format the code, run:
+
+```shell
+npm run format
+```
 
 ## Contributing
 
