@@ -1,8 +1,10 @@
 # Patchbay.js
 
 [![NPM](https://img.shields.io/npm/v/patchbay.js)](https://www.npmjs.com/package/patchbay.js)
-![NPM License](https://img.shields.io/npm/l/patchbay.js)
+![NPM Downloads](https://img.shields.io/npm/dw/patchbay.js)
+![npm bundle size](https://img.shields.io/bundlephobia/min/patchbay.js)
 ![GitHub Issues](https://img.shields.io/github/issues/helgesverre/patchbay-js)
+![NPM License](https://img.shields.io/npm/l/patchbay.js)
 
 ![Patchbay.js](./art/demo.gif)
 
