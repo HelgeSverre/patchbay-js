@@ -15,7 +15,7 @@
   "homepage": "https://github.com/HelgeSverre/patchbay-js#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/HelgeSverre/patchbay-js"
+    "url": "git+https://github.com/HelgeSverre/patchbay-js.git"
   },
   "license": "MIT",
   "author": {
