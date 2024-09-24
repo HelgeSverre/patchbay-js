@@ -26,7 +26,7 @@ yarn add patchbay.js
 ### Using a CDN
 
 ```html
-<script src="https://unpkg.com/patchbay.js/dist/patchbay.min.js" defer></script>
+<script src="https://unpkg.com/patchbay.js/dist/patchbay.umd.js" defer></script>
 ```
 
 ## Configuration Options
@@ -99,6 +99,13 @@ And if you drag the cable ends close to these elements, it will snap to them.
 ## Examples
 
 Check out the [examples](./examples) directory for some examples of how to use Patchbay.js.
+
+- [Basic Example](./examples/basic-usage.html) - A simple example demonstrating the basic usage of Patchbay.js.
+- [Snapping Example](./examples/snapping.html) - An example demonstrating how to snap cable ends to HTML elements.
+- [Customization Example](./examples/configurations.html) - An example demonstrating how to customize the appearance and
+  behavior of cables.
+- [Using the CDN](./examples/using-cdn-link.html) - An example showing how to use Patchbay.js with a CDN.
+- [Click to add](./examples/click-to-add.html) - An example demonstrating how to add cables by clicking on elements.
 
 ## Development
 

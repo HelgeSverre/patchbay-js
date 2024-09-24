@@ -2,15 +2,41 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Patchbay.js - Examples</title>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body>
-    <h1>Examples</h1>
+  <body class="bg-gray-100 flex-col flex items-center space-y-12 h-screen py-6 px-4">
+    <div class="max-w-lg w-full mb-3">
+      <h1 class="mb-4 text-2xl font-bold">Patchbay.js - Examples</h1>
 
-    <ul>
-      <li><a href="simple.html">Simple - Minimal configuration</a></li>
-      <li><a href="snap.html">Snap - Cable ends are snapped to the closest port</a></li>
-      <li><a href="click-to-add.html">Click to add - Add ports by clicking on the patch bay</a></li>
-    </ul>
+      <ul class="list-disc list-inside">
+        <li>
+          <a class="text-blue-600 underline hover:opacity-80" href="basic-usage.html">
+            Simple - Minimal configuration
+          </a>
+        </li>
+        <li>
+          <a class="text-blue-600 underline hover:opacity-80" href="snapping.html">
+            Snap - Cable ends are snapped to the closest port
+          </a>
+        </li>
+        <li>
+          <a class="text-blue-600 underline hover:opacity-80" href="click-to-add.html">
+            Click to add - Add ports by clicking on the patch bay
+          </a>
+        </li>
+        <li>
+          <a class="text-blue-600 underline hover:opacity-80" href="using-cdn-link.html">
+            Using CDN link - Load Patchbay.js from a CDN
+          </a>
+        </li>
+        <li>
+          <a class="text-blue-600 underline hover:opacity-80" href="configurations.html">
+            Configurator - Explore different configurations
+          </a>
+        </li>
+      </ul>
+    </div>
   </body>
 </html>

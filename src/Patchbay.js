@@ -143,6 +143,13 @@ class Patchbay {
     }
   }
 
+  clear() {
+    for (let cable of this.cables) {
+      this.removeCable(cable);
+    }
+    this.cables = [];
+  }
+
   /**
    * Update the physics simulation for all cables.
    */
@@ -156,6 +163,10 @@ class Patchbay {
    * Start the animation loop.
    */
   start() {
+    if (this.isRunning) {
+      return;
+    }
+
     this.isRunning = true;
     this.loop();
   }

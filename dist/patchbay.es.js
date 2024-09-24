@@ -232,6 +232,11 @@ class m {
     const e = this.cables.indexOf(t);
     e > -1 && (this.root.removeChild(t.element), this.cables.splice(e, 1));
   }
+  clear() {
+    for (let t of this.cables)
+      this.removeCable(t);
+    this.cables = [];
+  }
   /**
    * Update the physics simulation for all cables.
    */
@@ -243,7 +248,7 @@ class m {
    * Start the animation loop.
    */
   start() {
-    this.isRunning = !0, this.loop();
+    this.isRunning || (this.isRunning = !0, this.loop());
   }
   /**
    * Animation loop for physics simulation.
@@ -259,8 +264,6 @@ class m {
   }
 }
 export {
-  p as Cable,
-  m as Patchbay,
-  d as Point
+  m as default
 };
 //# sourceMappingURL=patchbay.es.js.map

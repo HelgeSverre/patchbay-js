@@ -3,17 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Patch Bay</title>
+    <title>Patchbay.js - Basic usage</title>
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body class="bg-white flex-col flex justify-center items-center h-screen">
-    <div class="max-w-lg w-full text-left pb-12 mb-12 border-b border-gray-200">
+  <body class="bg-gray-100 flex-col flex items-center space-y-12 h-screen py-6 px-4">
+    <div class="max-w-lg w-full mb-3">
       <a href="../examples/index.html" class="text-blue-600 inline-block hover:underline mb-4">
         &larr; Back to examples
       </a>
       <h1 class="mb-4 text-2xl font-bold">Simple - Minimal configuration</h1>
       <p class="text-gray-500">This example shows how to create a simple patch bay with minimal configuration.</p>
     </div>
+
     <div class="overflow-hidden bg-zinc-900 w-full max-w-lg flex flex-col gap-4 p-4 rounded-lg shadow-md">
       <!-- Upper side -->
       <div class="grid grid-cols-6 gap-2">
@@ -101,8 +102,6 @@
     <script src="../dist/patchbay.umd.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        const { Patchbay } = window.Patchbay;
-
         const patchbay = new Patchbay({
           draggable: false,
           color: "red",
