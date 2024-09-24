@@ -3,11 +3,22 @@ import path from "path";
 
 export default defineConfig({
   build: {
-    sourcemap: true,
     lib: {
       entry: path.resolve(__dirname, "src/index.js"),
       name: "Patchbay",
+      formats: ["es", "umd", "cjs"],
       fileName: (format) => `patchbay.${format}.js`,
     },
+    rollupOptions: {
+      output: {
+        globals: {
+          patchbay: "Patchbay",
+        },
+      },
+    },
+    emptyOutDir: true,
+    sourcemap: true,
+    outDir: "dist",
+    minify: true,
   },
 });

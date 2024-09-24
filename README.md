@@ -1,5 +1,8 @@
 # Patchbay.js
 
+[![NPM](https://img.shields.io/npm/v/patchbay.js)](https://www.npmjs.com/package/patchbay.js)
+![NPM License](https://img.shields.io/npm/l/patchbay.js)
+![GitHub Issues](https://img.shields.io/github/issues/helgesverre/patchbay-js)
 
 ![Patchbay.js](./art/demo.gif)
 
@@ -11,11 +14,19 @@ by [Reason Studio's Rack](https://www.reasonstudios.com/rack#:~:text=hear%20what
 
 ## Installation
 
+### Using npm
+
 ```shell
 npm install patchbay.js
 
 # Or with yarn
 yarn add patchbay.js
+```
+
+### Using a CDN
+
+```html
+<script src="https://unpkg.com/patchbay.js/dist/patchbay.min.js" defer></script>
 ```
 
 ## Configuration Options
