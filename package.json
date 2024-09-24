@@ -1,0 +1,35 @@
+{
+  "name": "patchbay",
+  "version": "1.0.0",
+  "description": "A physics-based rope simulation library for creating virtual patchbay visualizations",
+  "keywords": [
+    "patchbay",
+    "rope",
+    "physics",
+    "simulation",
+    "visualization"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "Helge Sverre",
+    "email": "helge.sverre@gmail.com",
+    "url": "https://helgesver.re"
+  },
+  "type": "module",
+  "main": "./dist/patchbay.umd.cjs",
+  "module": "./dist/patchbay.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "format": "npx prettier --write .",
+    "preview": "vite preview",
+    "sort": "npx sort-package-json"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "vite": "^4.3.9"
+  }
+}

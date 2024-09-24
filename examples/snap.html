@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Snapping</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-white flex flex-col justify-center items-center h-screen">
+    <div class="max-w-lg w-full text-left pb-12 mb-12 border-b border-gray-200">
+      <a href="../examples/index.html" class="text-blue-600 inline-block hover:underline mb-4">
+        &larr; Back to examples
+      </a>
+      <h1 class="mb-4 text-2xl font-bold">Snap - Cable ends are snapped to the closest port</h1>
+      <p class="text-gray-500">
+        By setting the <code>snapRadius</code> option, we can make the cable ends snap to the closest port.
+      </p>
+    </div>
+
+    <div class="bg-zinc-900 w-full max-w-lg flex flex-col gap-4 p-4 rounded-lg shadow-md">
+      <!-- Upper side -->
+      <div class="grid grid-cols-6 gap-2">
+        <div
+          id="input-1"
+          class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-zinc-600 flex items-center justify-center mx-auto"
+        >
+          <div class="bg-zinc-500 size-3 rounded-full"></div>
+        </div>
+        <div
+          id="input-2"
+          class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-zinc-600 flex items-center justify-center mx-auto"
+        >
+          <div class="bg-zinc-500 size-3 rounded-full"></div>
+        </div>
+        <div
+          id="input-3"
+          class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-zinc-600 flex items-center justify-center mx-auto"
+        >
+          <div class="bg-zinc-500 size-3 rounded-full"></div>
+        </div>
+        <div
+          id="input-4"
+          class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-zinc-600 flex items-center justify-center mx-auto"
+        >
+          <div class="bg-zinc-500 size-3 rounded-full"></div>
+        </div>
+        <div
+          id="input-5"
+          class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-zinc-600 flex items-center justify-center mx-auto"
+        >
+          <div class="bg-zinc-500 size-3 rounded-full"></div>
+        </div>
+        <div
+          id="input-6"
+          class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-zinc-600 flex items-center justify-center mx-auto"
+        >
+          <div class="bg-zinc-500 size-3 rounded-full"></div>
+        </div>
+      </div>
+      <hr class="border-zinc-800" />
+      <!-- Lower side -->
+      <div class="grid grid-cols-6 gap-2">
+        <div
+          id="output-1"
+          class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-blue-600 flex items-center justify-center mx-auto"
+        >
+          <div class="bg-zinc-500 size-3 rounded-full"></div>
+        </div>
+        <div
+          id="output-2"
+          class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-blue-600 flex items-center justify-center mx-auto"
+        >
+          <div class="bg-zinc-500 size-3 rounded-full"></div>
+        </div>
+        <div
+          id="output-3"
+          class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-blue-600 flex items-center justify-center mx-auto"
+        >
+          <div class="bg-zinc-500 size-3 rounded-full"></div>
+        </div>
+        <div
+          id="output-4"
+          class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-blue-600 flex items-center justify-center mx-auto"
+        >
+          <div class="bg-zinc-500 size-3 rounded-full"></div>
+        </div>
+        <div
+          id="output-5"
+          class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-blue-600 flex items-center justify-center mx-auto"
+        >
+          <div class="bg-zinc-500 size-3 rounded-full"></div>
+        </div>
+        <div
+          id="output-6"
+          class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-blue-600 flex items-center justify-center mx-auto"
+        >
+          <div class="bg-zinc-500 size-3 rounded-full"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../dist/patchbay.umd.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const { Patchbay } = window.Patchbay;
+
+        const patchbay = new Patchbay({
+          snapRadius: 100,
+        });
+
+        patchbay.connect(document.getElementById("input-1"), document.getElementById("output-2"), {
+          color: "#FF0000",
+        });
+
+        patchbay.connect(document.getElementById("input-6"), document.getElementById("output-1"), {
+          color: "#00FF00",
+        });
+        patchbay.start();
+      });
+    </script>
+  </body>
+</html>
