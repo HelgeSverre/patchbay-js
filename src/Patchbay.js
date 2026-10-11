@@ -1,22 +1,26 @@
 import Cable from "./Cable.js";
+import CanvasCable from "./CanvasCable.js";
 
 /**
  * @typedef {Object} PatchbayConfig
  * @property {HTMLElement} [container=document.body] - The container element for the patchbay.
- * @property {number} [gravity=1] - The gravity force applied to cables.
- * @property {number} [iterations=5] - The number of constraint solving iterations per update.
- * @property {string} [color='#000000'] - The default color of cables.
- * @property {number} [slack=1.1] - The default slack factor of cables.
- * @property {number} [segments=20] - The number of segments in cables.
- * @property {number} [snapRadius=100] - The radius for snapping to connector elements.
- * @property {number} [dragHandleSize=25] - The size of the drag handles.
- *
+ * @property {number} [gravity=1] - Gravity applied to cables each frame. Higher = more sag.
+ * @property {number} [iterations=5] - Constraint-solving passes per frame. More = stiffer cables.
+ * @property {string} [color='#000000'] - Default cable color.
+ * @property {number} [slack=1.1] - Multiplier for cable resting length. Values > 1 let the cable droop.
+ * @property {number} [segments=20] - Number of segments per cable. More = smoother curves, more DOM.
+ * @property {number} [snapRadius=100] - Radius in pixels for auto-snapping cable ends to targets.
+ * @property {number} [dragHandleSize=20] - Diameter of drag handles in pixels.
+ * @property {boolean} [draggable=true] - Whether cables accept mouse drag.
+ * @property {string} [snapTargetSelector='.cable-connector'] - CSS selector for snap-target elements.
+ * @property {number} [lineThickness=2] - Cable line thickness in pixels.
+ * @property {number} [zIndex=9999] - CSS z-index of the patchbay container.
+ * @property {boolean} [static=false] - When true, cables use page coordinates and ignore scroll.
+ * @property {boolean} [canvas=false] - Render cables via Canvas2D instead of DOM elements.
  */
 
 class Patchbay {
-  /**
-   * @type {PatchbayConfig}
-   */
+  /** @type {PatchbayConfig} */
   config = {
     container: document.body,
     gravity: 1,
@@ -27,156 +31,237 @@ class Patchbay {
     snapRadius: 100,
     dragHandleSize: 20,
     lineThickness: 2,
-    snapElementSelector: ".cable-connector",
+    snapTargetSelector: ".cable-connector",
+    draggable: true,
     zIndex: 9999,
+    static: false,
+    canvas: false,
   };
 
   /**
-   * @param {Partial<PatchbayConfig>} [config] - The configuration object to override default settings.
+   * Create a new patchbay.
+   * @param {Partial<PatchbayConfig>} [config] - Overrides for any default setting.
    */
   constructor(config = {}) {
     this.config = { ...this.config, ...config };
+    /** @type {(Cable|CanvasCable)[]} */
     this.cables = [];
+    this._rafId = null;
+    this._frame = 0;
+    /** @type {CanvasRenderingContext2D|null} */
+    this._ctx = null;
 
     if (!this.config.container) {
       throw new Error("No container element provided for patchbay");
     }
 
-    this.root = this.createRootElement();
+    this.root = this.config.canvas ? this.createCanvasRoot() : this.createRootElement();
     this.config.container.appendChild(this.root);
   }
 
+  /**
+   * DOM root (default).
+   * @returns {HTMLDivElement}
+   * @private
+   */
   createRootElement() {
     const root = document.createElement("div");
-
     root.classList.add("patchbay-container");
-    root.style.position = "fixed";
-    root.style.top = "0";
-    root.style.bottom = "0";
-    root.style.left = "0";
-    root.style.right = "0";
-    root.style.width = "100%";
-    root.style.height = "100%";
-    root.style.zIndex = this.config.zIndex || 9999;
-    root.style.pointerEvents = "none";
-
+    Object.assign(root.style, {
+      position: this.config.static ? "absolute" : "fixed",
+      top: "0",
+      left: "0",
+      width: "100%",
+      height: "100%",
+      zIndex: String(this.config.zIndex),
+      pointerEvents: "none",
+    });
+    if (this.config.static) {
+      root.style.minHeight = "100vh";
+    } else {
+      root.style.inset = "0";
+    }
     return root;
   }
 
   /**
-   * Create a new cable and add it to the patchbay.
-   *
-   * @param {HTMLElement} startElement - The start element to attach the cable to.
-   * @param {HTMLElement} endElement - The end element to attach the cable to.
-   * @param {Partial<CableConfig>} [cableConfig] - Override default cable settings for this cable.
-   * @returns {Cable}
+   * Canvas root.
+   * @returns {HTMLCanvasElement}
+   * @private
+   */
+  createCanvasRoot() {
+    const canvas = document.createElement("canvas");
+    canvas.classList.add("patchbay-canvas");
+    canvas.style.cssText = `position:fixed;top:0;left:0;pointer-events:none;z-index:${this.config.zIndex};`;
+
+    const size = () => {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      canvas.style.width = window.innerWidth + "px";
+      canvas.style.height = window.innerHeight + "px";
+    };
+    size();
+
+    const ctx = canvas.getContext("2d");
+    this._ctx = ctx;
+
+    window.addEventListener("resize", size);
+    this._onResize = size;
+
+    return canvas;
+  }
+
+  /**
+   * Internal helper — create cable with correct backend.
+   * @param {Object} cableSettings
+   * @returns {Cable|CanvasCable}
+   * @private
+   */
+  _createCable(cableSettings) {
+    const settings = { ...this.config, ...cableSettings };
+    delete settings.container;
+    delete settings.zIndex;
+
+    const cable = this.config.canvas ? new CanvasCable(settings) : new Cable(settings);
+
+    if (this.config.canvas && this._ctx) {
+      /** @type {CanvasCable} */ (cable)._attachCanvas(this._ctx, this.config.zIndex);
+    }
+
+    this.cables.push(cable);
+    if (!this.config.canvas) {
+      this.root.appendChild(/** @type {Cable} */ (cable).element);
+    }
+    return cable;
+  }
+
+  /**
+   * Connect two DOM elements with a cable.
+   * @param {HTMLElement} startElement
+   * @param {HTMLElement} endElement
+   * @param {Partial<CableConfig>} [cableConfig]
+   * @returns {Cable|CanvasCable}
    */
   connect(startElement, endElement, cableConfig = {}) {
-    const cableSettings = { ...this.config, ...cableConfig };
-
-    // Don't pass container to cable
-    delete cableSettings.container;
-
-    const cable = new Cable({
-      start: startElement,
-      end: endElement,
-      ...cableSettings,
-    });
-    this.cables.push(cable);
-    this.root.appendChild(cable.element);
-    return cable;
+    return this._createCable({ start: startElement, end: endElement, ...cableConfig });
   }
 
   /**
-   *
-   * @param {Point|{x: number, y: number}} startPoint
-   * @param {Point|{x: number, y: number}} endPoint
-   * @param cableConfig
+   * Connect two arbitrary points with a cable.
+   * @param {HTMLElement|{x: number, y: number}} startPoint
+   * @param {{x: number, y: number}} endPoint
+   * @param {Partial<CableConfig>} [cableConfig]
+   * @returns {Cable|CanvasCable}
    */
   connectPoints(startPoint, endPoint, cableConfig = {}) {
-    const cableSettings = { ...this.config, ...cableConfig };
-
-    // Don't pass container to cable
-    delete cableSettings.container;
-
-    const cable = new Cable({
-      start: startPoint,
-      end: endPoint,
-      ...cableSettings,
-    });
-    this.cables.push(cable);
-    this.root.appendChild(cable.element);
-
-    return cable;
+    return this._createCable({ start: startPoint, end: endPoint, ...cableConfig });
   }
 
+  /**
+   * Start a cable from a point and immediately begin dragging the free end.
+   * @param {HTMLElement|{x: number, y: number}} startPoint
+   * @param {Partial<CableConfig>} [cableConfig]
+   * @returns {Cable|CanvasCable}
+   */
   startCable(startPoint, cableConfig = {}) {
-    const cableSettings = { ...this.config, ...cableConfig };
-
-    // Don't pass container to cable
-    delete cableSettings.container;
-
-    const cable = new Cable({
-      start: startPoint,
-      end: startPoint,
-      ...cableSettings,
-    });
-
-    cable.startDragging("end");
+    const cable = this._createCable({ start: startPoint, end: startPoint, ...cableConfig });
+    cable.startDragging(null, "end");
     cable.update();
-
-    this.cables.push(cable);
-    this.root.appendChild(cable.element);
-
+    this._renderCanvas();
     return cable;
   }
 
   /**
-   * Remove a cable from the patchbay.
-   * @param {Cable} cable - The Cable instance to remove.
+   * Remove a single cable from the patchbay.
+   * @param {Cable|CanvasCable} cable
    */
   removeCable(cable) {
     const index = this.cables.indexOf(cable);
     if (index > -1) {
-      this.root.removeChild(cable.element);
+      cable.destroy();
+      if (!this.config.canvas) {
+        this.root.removeChild(/** @type {Cable} */ (cable).element);
+      }
       this.cables.splice(index, 1);
+      this._renderCanvas();
     }
-  }
-
-  clear() {
-    for (let cable of this.cables) {
-      this.removeCable(cable);
-    }
-    this.cables = [];
   }
 
   /**
-   * Update the physics simulation for all cables.
+   * Remove every cable.
+   */
+  clear() {
+    for (let i = this.cables.length - 1; i >= 0; i--) {
+      this.cables[i].destroy();
+      if (!this.config.canvas) {
+        this.root.removeChild(/** @type {Cable} */ (this.cables[i]).element);
+      }
+    }
+    this.cables.length = 0;
+
+    if (this._ctx) {
+      const ctx = this._ctx;
+      const dpr = window.devicePixelRatio || 1;
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, window.innerWidth * dpr, window.innerHeight * dpr);
+      ctx.restore();
+    }
+  }
+
+  /**
+   * Advance the physics simulation for all cables by one step.
    */
   update() {
-    for (let cable of this.cables) {
-      cable.update();
+    this._frame++;
+    const frame = Symbol();
+    const cables = this.cables;
+    for (let i = 0, len = cables.length; i < len; i++) {
+      cables[i].update(frame);
+    }
+
+    this._renderCanvas();
+  }
+
+  /** @private */
+  _renderCanvas() {
+    if (this._ctx) {
+      const ctx = this._ctx;
+      const dpr = window.devicePixelRatio || 1;
+      const cables = this.cables;
+
+      // Clear entire canvas in pixel space, then translate to page space
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, window.innerWidth * dpr, window.innerHeight * dpr);
+      ctx.restore();
+
+      ctx.save();
+      const scrollX = this.config.static ? window.scrollX : 0;
+      const scrollY = this.config.static ? window.scrollY : 0;
+      ctx.setTransform(dpr, 0, 0, dpr, -scrollX * dpr, -scrollY * dpr);
+      for (let i = 0, len = cables.length; i < len; i++) {
+        /** @type {CanvasCable} */ (cables[i]).draw();
+      }
+      ctx.restore();
     }
   }
 
   /**
-   * Start the animation loop.
+   * Start the `requestAnimationFrame` loop.
    */
   start() {
-    if (this.isRunning) {
-      return;
-    }
-
+    if (this.isRunning) return;
     this.isRunning = true;
-    this.loop();
+    this._tick();
   }
 
-  /**
-   * Animation loop for physics simulation.
-   */
-  loop() {
+  /** @private */
+  _tick() {
+    if (!this.isRunning) return;
     this.update();
-    requestAnimationFrame(() => this.loop());
+    this._rafId = requestAnimationFrame(() => this._tick());
   }
 
   /**
@@ -184,7 +269,24 @@ class Patchbay {
    */
   stop() {
     this.isRunning = false;
-    cancelAnimationFrame(this.loop);
+    if (this._rafId !== null) {
+      cancelAnimationFrame(this._rafId);
+      this._rafId = null;
+    }
+  }
+
+  /**
+   * Clean up the patchbay entirely.
+   */
+  destroy() {
+    this.stop();
+    this.clear();
+    if (this._onResize) {
+      window.removeEventListener("resize", this._onResize);
+    }
+    if (this.root.parentNode) {
+      this.root.parentNode.removeChild(this.root);
+    }
   }
 }
 

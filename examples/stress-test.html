@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Patchbay.js — Stress test</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #18181b;
+        user-select: none;
+      }
+
+      /* Full-viewport grid — scrolls with page for static-mode showcase */
+      #grid {
+        display: grid;
+        align-content: start;
+        padding-top: 2.75rem;
+      }
+      .stress-cell {
+        border-radius: 50%;
+        cursor: pointer;
+        transition:
+          background 0.1s,
+          box-shadow 0.1s,
+          transform 0.1s;
+        background: #3f3f46;
+      }
+      .stress-cell:hover {
+        transform: scale(1.8);
+        z-index: 2;
+      }
+      .stress-cell.split {
+        background: #52525b;
+      }
+      .stress-cell.row-top {
+        background: #52525b;
+      }
+      .stress-cell.row-bot {
+        background: #3f3f46;
+      }
+      .stress-cell.row-top.connected {
+        background: #f97316;
+        box-shadow: 0 0 3px #f97316;
+      }
+      .stress-cell.row-bot.connected {
+        background: #3b82f6;
+        box-shadow: 0 0 3px #3b82f6;
+      }
+      .stress-cell.pending {
+        background: #fff !important;
+        transform: scale(1.8);
+        box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+        z-index: 2;
+        animation: pulse 0.7s ease-in-out infinite alternate;
+      }
+      @keyframes pulse {
+        from {
+          box-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
+        }
+        to {
+          box-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
+        }
+      }
+
+      /* Floating controls — backdrop-blur glass */
+      .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem 1rem;
+        background: rgba(24, 24, 27, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        flex-wrap: wrap;
+      }
+      .overlay label {
+        font-size: 0.6875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #a1a1aa;
+        white-space: nowrap;
+      }
+      .overlay input[type="number"] {
+        width: 3.25rem;
+        height: 1.625rem;
+        padding: 0 0.25rem;
+        border: 1px solid #52525b;
+        border-radius: 0.25rem;
+        background: #27272a;
+        color: #e4e4e7;
+        font-size: 0.75rem;
+        font-variant-numeric: tabular-nums;
+        text-align: center;
+      }
+      .overlay input[type="number"]:focus {
+        outline: none;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.4);
+      }
+      .overlay input[type="color"] {
+        width: 1.5rem;
+        height: 1.5rem;
+        border: 1px solid #52525b;
+        border-radius: 0.25rem;
+        padding: 1px;
+        background: #27272a;
+        cursor: pointer;
+      }
+      .overlay input[type="checkbox"] {
+        width: auto;
+        height: auto;
+        accent-color: #6366f1;
+      }
+      .overlay .sep {
+        width: 1px;
+        height: 1.25rem;
+        background: #3f3f46;
+      }
+      .overlay .spacer {
+        flex: 1;
+        min-width: 0.5rem;
+      }
+
+      .btn-glass {
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.25rem 0.625rem;
+        border-radius: 0.25rem;
+        border: 1px solid #3f3f46;
+        background: rgba(255, 255, 255, 0.06);
+        color: #d4d4d8;
+        cursor: pointer;
+        white-space: nowrap;
+        transition:
+          background 0.1s,
+          border-color 0.1s;
+      }
+      .btn-glass:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: #6366f1;
+      }
+      .btn-glass.active {
+        background: #6366f1;
+        border-color: #6366f1;
+        color: #fff;
+      }
+
+      .stat-pill {
+        font-size: 0.6875rem;
+        font-variant-numeric: tabular-nums;
+        color: #a1a1aa;
+        white-space: nowrap;
+      }
+      .stat-pill strong {
+        color: #e4e4e7;
+      }
+      .stat-pill .ok {
+        color: #4ade80;
+      }
+      .stat-pill .warn {
+        color: #fbbf24;
+      }
+      .stat-pill .bad {
+        color: #ef4444;
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #fff;
+        color: #18181b;
+        font-size: 0.8125rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.15s;
+        z-index: 10001;
+      }
+      .toast.show {
+        opacity: 1;
+      }
+
+      .legend {
+        position: fixed;
+        bottom: 0.75rem;
+        right: 0.75rem;
+        display: flex;
+        gap: 0.75rem;
+        font-size: 0.625rem;
+        color: #71717a;
+        z-index: 9999;
+        pointer-events: none;
+      }
+      .legend span {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+      .legend-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+      }
+      .legend-dot.src {
+        background: #f97316;
+      }
+      .legend-dot.dst {
+        background: #3b82f6;
+      }
+      .legend-dot.free {
+        background: #52525b;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Floating overlay -->
+    <div class="overlay">
+      <label
+        >Size
+        <input
+          id="cell-size"
+          type="range"
+          value="16"
+          min="6"
+          max="40"
+          step="2"
+          style="width: 60px; accent-color: #6366f1"
+      /></label>
+      <span id="cell-size-label" style="font-size: 0.6875rem; color: #a1a1aa; min-width: 1.5rem; text-align: center"
+        >16</span
+      >
+      <span class="sep"></span>
+      <label>Cables <input id="cable-count-input" type="number" value="300" min="1" max="2000" /></label>
+      <label>Seg <input id="segments" type="number" value="8" min="3" max="30" /></label>
+      <label>Iter <input id="iterations" type="number" value="5" min="1" max="20" /></label>
+      <label>Grav <input id="gravity" type="number" value="2" min="0" max="20" step="0.5" /></label>
+      <label>Slack <input id="slack" type="number" value="1.1" min="0.5" max="3" step="0.1" /></label>
+      <span class="sep"></span>
+      <label>Ignore scroll <input id="static-mode" type="checkbox" /></label>
+      <label>Canvas <input id="canvas-mode" type="checkbox" checked /></label>
+      <input id="color" type="color" value="#6366f1" title="Cable color" />
+      <span class="sep"></span>
+      <button id="rebuild" class="btn-glass active">Rebuild</button>
+      <button id="random-fill" class="btn-glass">Random fill</button>
+      <button id="add-batch" class="btn-glass">+100</button>
+      <button id="clear" class="btn-glass" style="border-color: #dc2626; color: #fca5a5">Clear</button>
+      <span class="spacer"></span>
+      <span class="stat-pill">Ports <strong id="port-count">0</strong></span>
+      <span class="stat-pill">Cables <strong id="cable-count">0</strong></span>
+      <span class="stat-pill">Seg <strong id="segment-count">0</strong></span>
+      <span class="stat-pill">DOM <strong id="dom-count">0</strong></span>
+      <span class="stat-pill"><span id="fps-label">FPS</span> <strong id="fps-value">--</strong></span>
+      <span class="stat-pill">ms <strong id="frame-ms">--</strong></span>
+    </div>
+
+    <div id="grid"></div>
+    <div id="toast" class="toast"></div>
+
+    <div class="legend">
+      <span><span class="legend-dot src"></span> Source</span>
+      <span><span class="legend-dot dst"></span> Target</span>
+      <span><span class="legend-dot free"></span> Free</span>
+    </div>
+
+    <script src="../dist/patchbay.umd.js"></script>
+    <script>
+      const $ = (id) => document.getElementById(id);
+      let patchbay,
+        ports = [],
+        pendingSource = null,
+        cableConfig = {};
+      let _toastTimer = 0;
+
+      function toast(msg) {
+        const el = $("toast");
+        el.textContent = msg;
+        el.classList.add("show");
+        clearTimeout(_toastTimer);
+        _toastTimer = setTimeout(() => el.classList.remove("show"), 1400);
+      }
+
+      function updateStats() {
+        if (!patchbay) return;
+        const c = patchbay.cables.length;
+        const segs = c > 0 ? patchbay.cables.reduce((s, x) => s + x.points.length - 1, 0) : 0;
+        $("port-count").textContent = ports.length;
+        $("cable-count").textContent = c;
+        $("segment-count").textContent = segs;
+        $("dom-count").textContent = $("canvas-mode").checked
+          ? "—"
+          : document.querySelectorAll(".cable-segment").length;
+      }
+
+      function buildGrid() {
+        if (patchbay) {
+          patchbay.destroy();
+          patchbay = null;
+        }
+        pendingSource = null;
+
+        const cellSize = parseInt($("cell-size").value);
+        const gap = 3;
+        const grid = $("grid");
+        grid.innerHTML = "";
+        grid.style.gridTemplateColumns = `repeat(auto-fill, ${cellSize}px)`;
+        grid.style.gap = `${gap}px`;
+
+        const cols = Math.floor((window.innerWidth + gap) / (cellSize + gap));
+        const visibleRows = Math.floor((window.innerHeight + gap) / (cellSize + gap));
+        const rows = Math.max(visibleRows * 3, 60);
+
+        ports = [];
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const cell = document.createElement("div");
+            cell.classList.add("stress-cell");
+            cell.classList.add(r < rows / 2 ? "row-top" : "row-bot");
+            cell.style.width = `${cellSize}px`;
+            cell.style.height = `${cellSize}px`;
+            cell.addEventListener("click", () => onPortClick(cell));
+            grid.appendChild(cell);
+            ports.push(cell);
+          }
+        }
+
+        cableConfig = {
+          segments: parseInt($("segments").value),
+          iterations: parseInt($("iterations").value),
+          gravity: parseFloat($("gravity").value),
+          slack: parseFloat($("slack").value),
+          color: $("color").value,
+        };
+
+        patchbay = new Patchbay({
+          gravity: cableConfig.gravity,
+          iterations: cableConfig.iterations,
+          snapRadius: Math.max(cellSize + gap, 12),
+          snapTargetSelector: ".stress-cell",
+          draggable: false,
+          static: $("static-mode").checked,
+          canvas: $("canvas-mode").checked,
+        });
+
+        // Wrap update() with performance.measure for profiling
+        const orig = patchbay.update.bind(patchbay);
+        patchbay.update = function () {
+          performance.mark("u-s");
+          orig();
+          performance.mark("u-e");
+          performance.measure("patchbay-update", "u-s", "u-e");
+          performance.clearMarks("u-s");
+          performance.clearMarks("u-e");
+        };
+      }
+
+      function onPortClick(cell) {
+        if (pendingSource) {
+          if (cell === pendingSource) {
+            cell.classList.remove("pending");
+            pendingSource = null;
+            toast("Cancelled");
+            return;
+          }
+          patchbay.connect(pendingSource, cell, {
+            color: cableConfig.color,
+            segments: cableConfig.segments,
+            slack: cableConfig.slack,
+            gravity: cableConfig.gravity,
+            iterations: cableConfig.iterations,
+          });
+          pendingSource.classList.add("connected");
+          pendingSource.classList.remove("pending");
+          cell.classList.add("connected");
+          pendingSource = null;
+          toast("Connected");
+          updateStats();
+        } else {
+          pendingSource = cell;
+          cell.classList.add("pending");
+          toast("Click another port to connect");
+        }
+      }
+
+      function randomCables(count) {
+        const n = ports.length;
+        if (n < 2) return;
+        const colors = [
+          "#ef4444",
+          "#f97316",
+          "#eab308",
+          "#22c55e",
+          "#06b6d4",
+          "#6366f1",
+          "#d946ef",
+          "#ec4899",
+          "#14b8a6",
+        ];
+        const segs = parseInt($("segments").value);
+        for (let i = 0; i < count; i++) {
+          const a = Math.floor(Math.random() * n);
+          let b = Math.floor(Math.random() * n);
+          while (b === a) b = Math.floor(Math.random() * n);
+          patchbay.connect(ports[a], ports[b], {
+            color: colors[Math.floor(Math.random() * colors.length)],
+            segments: segs,
+            slack: cableConfig.slack,
+            gravity: cableConfig.gravity,
+            iterations: cableConfig.iterations,
+          });
+          ports[a].classList.add("connected");
+          ports[b].classList.add("connected");
+        }
+        updateStats();
+      }
+
+      function rebuild() {
+        buildGrid();
+        patchbay.start();
+        updateStats();
+        const n = ports.length;
+        toast(`${n} ports · ${Math.floor(n * 0.6)} fit for cables`);
+      }
+
+      // Slider: show value + rebuild on change
+      const cellSizeSlider = $("cell-size");
+      const cellSizeLabel = $("cell-size-label");
+      let _rebuildTimer = 0;
+      cellSizeSlider.addEventListener("input", () => {
+        cellSizeLabel.textContent = cellSizeSlider.value;
+        clearTimeout(_rebuildTimer);
+        _rebuildTimer = setTimeout(rebuild, 150);
+      });
+      cellSizeLabel.textContent = cellSizeSlider.value;
+
+      // Auto-rebuild on config changes that affect the grid
+      for (const id of ["static-mode", "canvas-mode"]) {
+        $(id).addEventListener("change", rebuild);
+      }
+
+      $("rebuild").addEventListener("click", rebuild);
+      $("random-fill").addEventListener("click", () => {
+        cableConfig = {
+          segments: parseInt($("segments").value),
+          iterations: parseInt($("iterations").value),
+          gravity: parseFloat($("gravity").value),
+          slack: parseFloat($("slack").value),
+          color: $("color").value,
+        };
+        randomCables(parseInt($("cable-count-input").value));
+      });
+      $("add-batch").addEventListener("click", () => {
+        cableConfig = {
+          segments: parseInt($("segments").value),
+          iterations: parseInt($("iterations").value),
+          gravity: parseFloat($("gravity").value),
+          slack: parseFloat($("slack").value),
+          color: $("color").value,
+        };
+        randomCables(100);
+      });
+      $("clear").addEventListener("click", () => {
+        if (!patchbay) return;
+        patchbay.clear();
+        if (pendingSource) {
+          pendingSource.classList.remove("pending");
+          pendingSource = null;
+        }
+        document.querySelectorAll(".stress-cell").forEach((c) => c.classList.remove("connected"));
+        updateStats();
+        toast("Cleared");
+      });
+
+      // FPS loop
+      let lastTime = performance.now(),
+        frames = 0;
+      function fpsLoop() {
+        frames++;
+        requestAnimationFrame(fpsLoop);
+        const now = performance.now();
+        if (now - lastTime < 400) return;
+        const fps = Math.round(frames / ((now - lastTime) / 1000));
+        const el = $("fps-value");
+        el.textContent = fps;
+        el.className = fps < 30 ? "bad" : fps < 50 ? "warn" : "ok";
+        $("fps-label").className = el.className;
+
+        const measures = performance.getEntriesByType("measure");
+        let total = 0;
+        for (let i = measures.length - 1; i >= 0 && i >= measures.length - 60; i--) total += measures[i].duration;
+        const avg = measures.length > 0 ? total / Math.min(measures.length, 60) : 0;
+        performance.clearMeasures("patchbay-update");
+
+        $("frame-ms").innerHTML =
+          `<span class="${avg > 16 ? "bad" : avg > 10 ? "warn" : "ok"}">${avg.toFixed(1)}</span>`;
+
+        frames = 0;
+        lastTime = now;
+        updateStats();
+      }
+
+      rebuild();
+      fpsLoop();
+
+      // Exposed for headless profiling
+      window._profileRebuild = rebuild;
+      window._profileRandomFill = (n) => {
+        cableConfig = {
+          segments: parseInt($("segments").value),
+          iterations: parseInt($("iterations").value),
+          gravity: parseFloat($("gravity").value),
+          slack: parseFloat($("slack").value),
+          color: $("color").value,
+        };
+        randomCables(n);
+      };
+    </script>
+  </body>
+</html>

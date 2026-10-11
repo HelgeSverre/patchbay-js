@@ -1,22 +1,68 @@
-import Point from "./Point";
+import Point from "./Point.js";
 
 /**
  * @typedef {Object} CableConfig
- * @property {HTMLElement|Point} start - The start element to attach the cable to.
- * @property {HTMLElement|Point} end - The end element to attach the cable to.
- * @property {string} [color='#000000'] - The color of the cable.
- * @property {number} [dragHandleSize=25] - The size of the drag handles.
- * @property {number} [gravity=1] - The gravity factor of the cable.
- * @property {number} [iterations=5] - The number of iterations to solve constraints.
- * @property {number} [lineThickness=2] - The thickness of the cable line.
- * @property {number} [segments=20] - The number of segments in the cable.
- * @property {number} [slack=1.1] - The slack factor of the cable.
- * @property {number} [snapRadius=100] - The radius for snapping to connector elements.
- * @property {string} [snapTargetSelector='.cable-connector'] - The selector for snap target elements.
- * @property {boolean} [draggable=true] - Whether the cable start/end points are draggable.
+ * @property {HTMLElement|Point|{x:number,y:number}} start - Element or point to anchor the cable start.
+ * @property {HTMLElement|Point|{x:number,y:number}} end - Element or point to anchor the cable end.
+ * @property {string} [color='#000000'] - Cable color.
+ * @property {number} [dragHandleSize=25] - Diameter of drag handles in pixels.
+ * @property {number} [gravity=1] - Gravity applied each frame.
+ * @property {number} [iterations=5] - Constraint-solving passes per frame.
+ * @property {number} [lineThickness=2] - Cable line thickness.
+ * @property {number} [segments=20] - Number of segments in the cable.
+ * @property {number} [slack=1.1] - Multiplier for resting length.
+ * @property {number} [snapRadius=100] - Snap-to-target radius in pixels.
+ * @property {string} [snapTargetSelector='.cable-connector'] - CSS selector for snap targets.
+ * @property {boolean} [draggable=true] - Whether cable ends are draggable.
+ * @property {boolean} [static=false] - Use page coordinates instead of viewport coordinates.
  */
 
+// --- Shared drag event listeners ---
+
+/** @type {Set<Cable>} */
+const ACTIVE_CABLES = new Set();
+let _globalListenersSetup = false;
+
+/** @type {WeakMap<Element, {rect: DOMRect, frame: number|symbol|undefined}>} */
+const _rectCache = new WeakMap();
+
+function setupGlobalListeners() {
+  if (_globalListenersSetup) return;
+  _globalListenersSetup = true;
+  document.addEventListener("mousemove", onGlobalMouseMove);
+  document.addEventListener("mouseup", onGlobalMouseUp);
+}
+
+function teardownGlobalListeners() {
+  if (!_globalListenersSetup) return;
+  if (ACTIVE_CABLES.size > 0) return;
+  _globalListenersSetup = false;
+  document.removeEventListener("mousemove", onGlobalMouseMove);
+  document.removeEventListener("mouseup", onGlobalMouseUp);
+}
+
+/**
+ * @param {MouseEvent} e
+ */
+function onGlobalMouseMove(e) {
+  for (const cable of ACTIVE_CABLES) {
+    if (cable.isDragging) cable._onDrag(e);
+  }
+}
+
+/**
+ * @param {MouseEvent} e
+ */
+function onGlobalMouseUp(e) {
+  for (const cable of ACTIVE_CABLES) {
+    if (cable.isDragging) cable._onStopDrag(e);
+  }
+}
+
+// --- Cable class ---
+
 class Cable {
+  /** @type {CableConfig} */
   config = {
     color: "#000000",
     dragHandleSize: 25,
@@ -28,50 +74,83 @@ class Cable {
     snapRadius: 100,
     snapTargetSelector: ".cable-connector",
     draggable: true,
+    static: false,
   };
 
   /**
-   * @param {CableConfig} [config] - The configuration object to override default settings.
+   * Create a cable with anchors and physics.
+   * @param {CableConfig} [config]
    */
   constructor(config = {}) {
     this.config = { ...this.config, ...config };
+    /** @type {HTMLElement|Point|{x:number,y:number}|null} */
     this.start = this.config.start;
+    /** @type {HTMLElement|Point|{x:number,y:number}|null} */
     this.end = this.config.end;
 
+    /** @type {boolean} */
     this.isDragging = false;
+    /** @type {'start'|'end'|null} */
     this.draggedEnd = null;
+    /** @private */
+    this._prevStartX = NaN;
+    /** @private */
+    this._prevStartY = NaN;
+    /** @private */
+    this._prevEndX = NaN;
+    /** @private */
+    this._prevEndY = NaN;
+    /** @private */
+    this._settleFrames = 60;
 
+    /** @type {HTMLDivElement} */
     this.element = this.createMainElement();
+    /** @type {Point[]} */
     this.points = this.initializePoints();
+    /** @type {HTMLDivElement[]} */
     this.segmentElements = this.createSegmentElements();
 
     if (this.config.draggable) {
       this.setupDragHandles();
-      this.setupDragEvents();
+      setupGlobalListeners();
+      ACTIVE_CABLES.add(this);
     }
   }
 
+  /**
+   * Create the positioning wrapper div for this cable.
+   * @returns {HTMLDivElement}
+   * @private
+   */
   createMainElement() {
     const element = document.createElement("div");
     element.classList.add("cable-container");
-    element.style.position = "fixed";
+    element.style.position = this.config.static ? "absolute" : "fixed";
     element.style.top = "0";
     element.style.left = "0";
     element.style.pointerEvents = "none";
     return element;
   }
 
+  /**
+   * Build the array of Point objects representing the cable.
+   * @returns {Point[]}
+   * @private
+   */
   initializePoints() {
     const startPos = this.getElementCenter(this.start);
     const endPos = this.getElementCenter(this.end);
-    const points = [new Point(startPos.x, startPos.y)];
     const dx = endPos.x - startPos.x;
     const dy = endPos.y - startPos.y;
-    const totalLength = Math.sqrt(dx * dx + dy * dy) * this.config.slack;
-    const segmentLength = totalLength / (this.config.segments - 1);
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const maxSegLen = this.config.maxSegmentLength || 30;
+    const segs = Math.max(this.config.segments, Math.ceil(distance / maxSegLen));
+    const totalLength = distance * this.config.slack;
+    const segmentLength = totalLength / (segs - 1);
 
-    for (let i = 1; i < this.config.segments - 1; i++) {
-      const t = i / (this.config.segments - 1);
+    const points = [new Point(startPos.x, startPos.y)];
+    for (let i = 1; i < segs - 1; i++) {
+      const t = i / (segs - 1);
       points.push(
         new Point(
           startPos.x + dx * t + (Math.random() - 0.5) * segmentLength,
@@ -84,45 +163,55 @@ class Cable {
   }
 
   /**
-   * Get the center of an element or point.
+   * Get the center x/y of an element or point object.
+   * Uses a frame-level cache so repeated calls for the same element in the
+   * same frame only trigger `getBoundingClientRect` once.
    *
-   * @param {HTMLElement|Point|{x: number, y: number}} element
-   * @returns {{x, y}|null|{x: number, y: number}}
+   * @param {HTMLElement|Point|{x:number,y:number}|null} element
+   * @returns {{x: number, y: number}|null}
    */
   getElementCenter(element) {
-    if (element instanceof Point || (element.hasOwnProperty("x") && element.hasOwnProperty("y"))) {
-      return {
-        x: element.x,
-        y: element.y,
-      };
+    if (element === null) return null;
+
+    // Fast path: plain {x,y} point (no DOM lookup needed)
+    const ex = element.x;
+    const ey = element.y;
+    if (typeof element.getBoundingClientRect !== "function" && ex !== undefined && ey !== undefined) {
+      return { x: ex, y: ey };
     }
 
-    if (element instanceof HTMLElement) {
-      const { height, left, top, width } = element.getBoundingClientRect();
-      return {
-        x: left + width / 2,
-        y: top + height / 2,
-      };
+    // DOM element — use frame-level cache to avoid redundant layout reflow
+    /** @type {Element} */ const el = /** @type {Element} */ (element);
+    let entry = _rectCache.get(el);
+    if (!entry || this._frame === undefined || entry.frame !== this._frame) {
+      entry = { rect: el.getBoundingClientRect(), frame: this._frame };
+      _rectCache.set(el, entry);
     }
-
-    return null;
+    const { rect } = entry;
+    const scrollX = this.config.static ? window.scrollX : 0;
+    const scrollY = this.config.static ? window.scrollY : 0;
+    return { x: rect.left + rect.width / 2 + scrollX, y: rect.top + rect.height / 2 + scrollY };
   }
 
+  /**
+   * Create and attach the start + end drag handles.
+   * @private
+   */
   setupDragHandles() {
     this.startHandle = this.createDragHandle();
     this.endHandle = this.createDragHandle();
     this.element.appendChild(this.startHandle);
     this.element.appendChild(this.endHandle);
+
+    this.startHandle.addEventListener("mousedown", (e) => this._onDragStart(e, "start"));
+    this.endHandle.addEventListener("mousedown", (e) => this._onDragStart(e, "end"));
   }
 
-  setupDragEvents() {
-    this.startHandle.addEventListener("mousedown", (e) => this.startDragging(e, "start"));
-    this.endHandle.addEventListener("mousedown", (e) => this.startDragging(e, "end"));
-
-    document.addEventListener("mousemove", (e) => this.drag(e));
-    document.addEventListener("mouseup", (e) => this.stopDragging(e));
-  }
-
+  /**
+   * Create a single circular drag handle div.
+   * @returns {HTMLDivElement}
+   * @private
+   */
   createDragHandle() {
     const handle = document.createElement("div");
     handle.classList.add("cable-drag-handle");
@@ -137,10 +226,16 @@ class Cable {
     return handle;
   }
 
-  startDragging(event, end) {
+  /**
+   * Begin dragging one end of the cable.
+   * @param {MouseEvent|null} event
+   * @param {'start'|'end'} end - Which end to drag.
+   * @private
+   */
+  _onDragStart(event, end) {
     this.isDragging = true;
+    this._settleFrames = 30;
     this.draggedEnd = end;
-
     if (end === "start") {
       this.start = null;
     } else {
@@ -148,24 +243,45 @@ class Cable {
     }
   }
 
-  drag(event) {
+  /** @deprecated Use _onDragStart directly. */
+  startDragging(event, end) {
+    this._onDragStart(event, end);
+  }
+
+  /**
+   * Handle mousemove while dragging.
+   * @param {MouseEvent} event
+   * @private
+   */
+  _onDrag(event) {
     if (!this.isDragging) return;
-    const { clientX, clientY } = event;
+    const clientX = event.clientX + (this.config.static ? window.scrollX : 0);
+    const clientY = event.clientY + (this.config.static ? window.scrollY : 0);
     if (this.draggedEnd === "start") {
       this.points[0].x = clientX;
       this.points[0].y = clientY;
     } else {
-      this.points[this.points.length - 1].x = clientX;
-      this.points[this.points.length - 1].y = clientY;
+      const last = this.points[this.points.length - 1];
+      last.x = clientX;
+      last.y = clientY;
     }
-
     this.update();
   }
 
-  stopDragging() {
+  /** @deprecated Use _onDrag directly. */
+  drag(event) {
+    this._onDrag(event);
+  }
+
+  /**
+   * Handle mouseup — try to snap the dragged end to a target.
+   * @private
+   */
+  _onStopDrag() {
     if (!this.isDragging) return;
 
-    const draggedPoint = this.draggedEnd === "start" ? this.points[0] : this.points[this.points.length - 1];
+    const idx = this.draggedEnd === "start" ? 0 : this.points.length - 1;
+    const draggedPoint = this.points[idx];
     const snapTarget = this.findSnapTarget(draggedPoint.x, draggedPoint.y);
 
     if (snapTarget) {
@@ -181,119 +297,185 @@ class Cable {
 
     this.isDragging = false;
     this.draggedEnd = null;
+    this._settleFrames = 30;
     this.update();
   }
 
+  /** @deprecated Use _onStopDrag directly. */
+  stopDragging() {
+    this._onStopDrag();
+  }
+
+  /**
+   * Find the nearest snap-target element within `snapRadius` pixels.
+   * Uses squared distance to avoid sqrt in the inner loop.
+   *
+   * @param {number} x - Viewport x coordinate.
+   * @param {number} y - Viewport y coordinate.
+   * @returns {Element|null}
+   */
   findSnapTarget(x, y) {
-    const potentialTargets = document.querySelectorAll(this.config.snapTargetSelector);
+    const targets = document.querySelectorAll(this.config.snapTargetSelector);
+    let closest = null;
+    let closestDistSq = this.config.snapRadius ** 2;
 
-    let closestElement = null;
-    let closestDistance = Infinity;
+    for (let i = 0; i < targets.length; i++) {
+      const el = targets[i];
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2 + (this.config.static ? window.scrollX : 0);
+      const cy = rect.top + rect.height / 2 + (this.config.static ? window.scrollY : 0);
+      const dx = x - cx;
+      const dy = y - cy;
+      const distSq = dx * dx + dy * dy;
 
-    for (let element of potentialTargets) {
-      const rect = element.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+      if (distSq <= closestDistSq) {
+        closestDistSq = distSq;
+        closest = el;
+      }
+    }
+    return closest;
+  }
 
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        closestElement = element;
+  /**
+   * Create DOM elements for each cable segment.
+   * @returns {HTMLDivElement[]}
+   * @private
+   */
+  createSegmentElements() {
+    const count = this.points.length - 1;
+    /** @type {HTMLDivElement[]} */
+    const segments = new Array(count);
+    for (let i = 0; i < count; i++) {
+      const seg = document.createElement("div");
+      seg.classList.add("cable-segment");
+      seg.style.position = "absolute";
+      seg.style.background = this.config.color;
+      seg.style.height = `${this.config.lineThickness}px`;
+      seg.style.transformOrigin = "0 50%";
+      seg.style.left = "0";
+      seg.style.top = "0";
+      seg.style.contain = "layout style paint";
+      this.element.appendChild(seg);
+      segments[i] = seg;
+    }
+    return segments;
+  }
+
+  /**
+   * Advance the cable simulation by one frame.
+   * Skips physics for dormant cables whose endpoints haven't moved.
+   * @param {number|symbol} [frame] - Token shared only within one patchbay update.
+   */
+  update(frame = Symbol()) {
+    this._frame = frame;
+
+    // Anchor start
+    if (this.start) {
+      const c = this.getElementCenter(this.start);
+      if (c) {
+        if (c.x !== this._prevStartX || c.y !== this._prevStartY) {
+          this._prevStartX = c.x;
+          this._prevStartY = c.y;
+          this._settleFrames = 30;
+        }
+        this.points[0].x = c.x;
+        this.points[0].y = c.y;
+      }
+    }
+    // Anchor end
+    if (this.end) {
+      const c = this.getElementCenter(this.end);
+      if (c) {
+        if (c.x !== this._prevEndX || c.y !== this._prevEndY) {
+          this._prevEndX = c.x;
+          this._prevEndY = c.y;
+          this._settleFrames = 30;
+        }
+        const last = this.points[this.points.length - 1];
+        last.x = c.x;
+        last.y = c.y;
       }
     }
 
-    // Only return the closest element if it's within the snap radius
-    return closestDistance <= this.config.snapRadius ? closestElement : null;
-  }
-
-  createSegmentElements() {
-    return this.points.slice(0, -1).map((_, index) => {
-      const segment = document.createElement("div");
-      segment.classList.add("cable-segment");
-      segment.style.position = "absolute";
-      segment.style.background = this.config.color;
-      segment.style.height = this.config.lineThickness + "px";
-      segment.style.transformOrigin = "0 50%";
-      this.element.appendChild(segment);
-      return segment;
-    });
-  }
-
-  update() {
-    if (this.start) {
-      const center = this.getElementCenter(this.start);
-      this.points[0].x = center.x;
-      this.points[0].y = center.y;
-    }
-    if (this.end) {
-      const center = this.getElementCenter(this.end);
-      this.points[this.points.length - 1].x = center.x;
-      this.points[this.points.length - 1].y = center.y;
+    // Skip physics for dormant cables that have settled
+    if (this._settleFrames <= 0 && !this.isDragging) {
+      this.render();
+      return;
     }
 
-    // Apply gravity
+    // Gravity on interior points
     for (let i = 1; i < this.points.length - 1; i++) {
       this.points[i].y += this.config.gravity;
     }
 
-    // Solve constraints
+    // Constraint solving
+    const segLen = this.calculateSegmentLength();
     for (let j = 0; j < this.config.iterations; j++) {
-      this.solveConstraints();
+      this.solveConstraints(segLen);
     }
 
+    this._settleFrames--;
     this.render();
   }
 
-  solveConstraints() {
-    const segmentLength = this.calculateSegmentLength();
-    for (let i = 0; i < this.points.length - 1; i++) {
+  /**
+   * Run one pass of distance-constraint relaxation.
+   * @param {number} segmentLength - Target distance between consecutive points.
+   * @private
+   */
+  solveConstraints(segmentLength) {
+    const len = this.points.length - 1;
+    for (let i = 0; i < len; i++) {
       const p1 = this.points[i];
       const p2 = this.points[i + 1];
       const dx = p2.x - p1.x;
       const dy = p2.y - p1.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const difference = (segmentLength - distance) / distance;
-      const offsetX = dx * 0.5 * difference;
-      const offsetY = dy * 0.5 * difference;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
+      const diff = (segmentLength - dist) / dist;
+      const ox = dx * 0.5 * diff;
+      const oy = dy * 0.5 * diff;
 
       if (i > 0) {
-        p1.x -= offsetX;
-        p1.y -= offsetY;
+        p1.x -= ox;
+        p1.y -= oy;
       }
-      if (i < this.points.length - 2) {
-        p2.x += offsetX;
-        p2.y += offsetY;
+      if (i < len - 1) {
+        p2.x += ox;
+        p2.y += oy;
       }
     }
   }
 
+  /**
+   * Compute the target length of each segment based on the straight-line
+   * distance between endpoints and the slack factor.
+   * @returns {number}
+   * @private
+   */
   calculateSegmentLength() {
-    const totalLength = this.calculateTotalLength();
-    return totalLength / (this.config.segments - 1);
+    const s = this.points[0];
+    const e = this.points[this.points.length - 1];
+    const dx = e.x - s.x;
+    const dy = e.y - s.y;
+    return (Math.sqrt(dx * dx + dy * dy) * this.config.slack) / (this.points.length - 1);
   }
 
-  calculateTotalLength() {
-    const start = this.points[0];
-    const end = this.points[this.points.length - 1];
-    const dx = end.x - start.x;
-    const dy = end.y - start.y;
-    return Math.sqrt(dx * dx + dy * dy) * this.config.slack;
-  }
-
+  /**
+   * Update segment DOM positions to match physics points.
+   * @private
+   */
   render() {
-    this.segmentElements.forEach((segment, index) => {
-      const p1 = this.points[index];
-      const p2 = this.points[index + 1];
+    const segs = this.segmentElements;
+    for (let i = 0; i < segs.length; i++) {
+      const p1 = this.points[i];
+      const p2 = this.points[i + 1];
       const dx = p2.x - p1.x;
       const dy = p2.y - p1.y;
-      const length = Math.sqrt(dx * dx + dy * dy);
-      const angle = Math.atan2(dy, dx);
 
-      segment.style.width = `${length}px`;
-      segment.style.left = `${p1.x}px`;
-      segment.style.top = `${p1.y}px`;
-      segment.style.transform = `rotate(${angle}rad)`;
-    });
+      const seg = segs[i];
+      seg.style.width = `${Math.sqrt(dx * dx + dy * dy)}px`;
+      seg.style.transform = `translate(${p1.x}px, ${p1.y}px) rotate(${Math.atan2(dy, dx)}rad)`;
+    }
 
     if (this.config.draggable) {
       this.updateDragHandlePosition(this.startHandle, this.points[0]);
@@ -301,9 +483,26 @@ class Cable {
     }
   }
 
+  /**
+   * Position a drag handle centred on a point.
+   * @param {HTMLDivElement} handle
+   * @param {Point} point
+   * @private
+   */
   updateDragHandlePosition(handle, point) {
-    handle.style.left = `${point.x - this.config.dragHandleSize / 2}px`;
-    handle.style.top = `${point.y - this.config.dragHandleSize / 2}px`;
+    const half = this.config.dragHandleSize / 2;
+    handle.style.left = `${point.x - half}px`;
+    handle.style.top = `${point.y - half}px`;
+  }
+
+  /**
+   * Remove this cable from the global listener set and clean up.
+   */
+  destroy() {
+    if (this.config.draggable) {
+      ACTIVE_CABLES.delete(this);
+      teardownGlobalListeners();
+    }
   }
 }
 

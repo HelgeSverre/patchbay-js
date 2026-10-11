@@ -1,3 +1,3 @@
-import Patchbay from "./PatchBay";
+import Patchbay from "./Patchbay.js";
 
 export default Patchbay;

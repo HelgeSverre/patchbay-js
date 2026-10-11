@@ -2,7 +2,7 @@
 
 [![NPM](https://img.shields.io/npm/v/patchbay.js)](https://www.npmjs.com/package/patchbay.js)
 ![NPM Downloads](https://img.shields.io/npm/dw/patchbay.js)
-![npm bundle size](https://img.shields.io/bundlephobia/min/patchbay.js)
+
 ![GitHub Issues](https://img.shields.io/github/issues/helgesverre/patchbay-js)
 ![NPM License](https://img.shields.io/npm/l/patchbay.js)
 
@@ -36,7 +36,10 @@ yarn add patchbay.js
 | Option             | Type    | Default            | Description                                                                                                 |
 | ------------------ | ------- | ------------------ | ----------------------------------------------------------------------------------------------------------- |
 | color              | string  | "#000000"          | The color of the cable.                                                                                     |
-| dragHandleSize     | number  | 25                 | The size of the drag handles in pixels.                                                                     |
+| canvas             | boolean | false              | Render cables on a shared Canvas2D surface instead of individual DOM segments.                              |
+| container          | Element | document.body      | The container element for the patchbay.                                                                     |
+| dragHandleSize     | number  | 20                 | The size of the drag handles in pixels.                                                                     |
+| draggable          | boolean | true               | Whether the cable start/end points are draggable by the user.                                               |
 | gravity            | number  | 1                  | The gravity factor applied to the cable. Higher values make the cable sag more.                             |
 | iterations         | number  | 5                  | The number of iterations to solve constraints. Higher values increase stability but may impact performance. |
 | lineThickness      | number  | 2                  | The thickness of the cable line in pixels.                                                                  |
@@ -44,12 +47,13 @@ yarn add patchbay.js
 | slack              | number  | 1.1                | The slack factor of the cable. Values greater than 1 allow the cable to hang loosely.                       |
 | snapRadius         | number  | 100                | The radius (in pixels) for snapping to connector elements when dragging cable ends.                         |
 | snapTargetSelector | string  | ".cable-connector" | The CSS selector for identifying snap target elements.                                                      |
-| draggable          | boolean | true               | Whether the cable start/end points are draggable by the user.                                               |
+| static             | boolean | false              | When `true`, cables use page coordinates instead of viewport coordinates, so they don't respond to scroll.  |
+| zIndex             | number  | 9999               | The CSS z-index of the patchbay container.                                                                  |
 
 ### Usage Example
 
 ```javascript
-import { Patchbay } from "patchbay.js";
+import Patchbay from "patchbay.js";
 
 const patchbay = new Patchbay({
   // Global configuration for all cables
@@ -107,7 +111,8 @@ Check out the [examples](./examples) directory for some examples of how to use P
 - [Customization Example](./examples/configurations.html) - An example demonstrating how to customize the appearance and
   behavior of cables.
 - [Using the CDN](./examples/using-cdn-link.html) - An example showing how to use Patchbay.js with a CDN.
-- [Click to add](./examples/click-to-add.html) - An example demonstrating how to add cables by clicking on elements.
+- [Click to add](./examples/click-to-add.html) - Drag from a port to create and connect a cable.
+- [Stress test](./examples/stress-test.html) - Compare DOM and canvas rendering with hundreds of cables.
 
 ## Development
 
@@ -123,6 +128,22 @@ cd patchbay-js
 npm install
 npm run build
 ```
+
+### Verification
+
+Use Node 24 (see `.nvmrc`) and install the browser binaries once:
+
+```shell
+npm ci
+npx playwright install chromium firefox webkit
+npm test
+npm run test:e2e
+npm run test:package
+```
+
+`npm test` runs unit and regression tests in Chromium, Firefox, and WebKit. `npm run test:e2e` builds the library and tests the example pages, dragging, snapping, scrolling, resizing, and stress controls in all three browsers. The Chromium checks also use a high DPI display. The CDN example requires an internet connection.
+
+`npm run test:package` installs a temporary npm tarball and checks ESM and CommonJS imports and package contents. Use `npm run test:headed` to watch the Chromium unit tests. Performance traces from `node scripts/profile.mjs 300 5 true` are stored locally in `profiles/` and excluded from Git and npm packages.
 
 ### Formatting
 

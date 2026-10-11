@@ -2,3 +2,8 @@ node_modules
 .idea/
 .vscode/
 yarn.lock
+profiles/
+test-results/
+playwright-report/
+**/__screenshots__/
+*.tgz

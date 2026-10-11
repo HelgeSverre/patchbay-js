@@ -1,0 +1,237 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #f3f4f6;
+  color: #111827;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 1.5rem 1rem;
+}
+
+a {
+  color: #2563eb;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+  opacity: 0.8;
+}
+
+h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  color: #374151;
+}
+
+.page-header {
+  max-width: 32rem;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+.page-header p {
+  color: #6b7280;
+  margin-top: 0.5rem;
+}
+.page-header code {
+  background: #e5e7eb;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+/* --- Patchbay panel --- */
+.panel {
+  background: #18181b;
+  width: 100%;
+  max-width: 32rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.panel-divider {
+  border: none;
+  border-top: 1px solid #27272a;
+}
+
+.port-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.5rem;
+}
+
+/* --- Port connector --- */
+.connector {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 2px solid #52525b;
+  background: #18181b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+.connector-inner {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: #71717a;
+}
+.connector.blue {
+  border-color: #2563eb;
+}
+.connector.green {
+  border-color: #22c55e;
+}
+.connector.red {
+  border-color: #ef4444;
+}
+
+/* --- Form --- */
+.form-card {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #d1d5db;
+  max-width: 32rem;
+  width: 100%;
+  margin-bottom: 2rem;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+.form-grid label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+.form-grid input {
+  display: block;
+  width: 100%;
+  height: 2.25rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+.form-grid input[type="color"] {
+  padding: 0.125rem;
+}
+.form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.btn {
+  background: #2563eb;
+  color: #fff;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+.btn:hover {
+  background: #1d4ed8;
+}
+.btn.danger {
+  background: #dc2626;
+}
+.btn.danger:hover {
+  background: #b91c1c;
+}
+
+.flex-spacer {
+  flex: 1;
+}
+
+/* --- FPS counter --- */
+.fps-counter {
+  position: fixed;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: rgba(0, 0, 0, 0.8);
+  color: #4ade80;
+  font-family: monospace;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  z-index: 10000;
+  pointer-events: none;
+}
+.fps-counter.warn {
+  color: #fbbf24;
+}
+.fps-counter.bad {
+  color: #ef4444;
+}
+
+/* --- Stress test grid --- */
+.stress-grid {
+  display: grid;
+  gap: 2px;
+  padding: 2px;
+}
+.stress-cell {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #52525b;
+  cursor: pointer;
+}
+.stress-cell:hover {
+  background: #a1a1aa;
+}
+
+.controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.controls label {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+.controls input[type="range"] {
+  width: 100px;
+}
+.controls input[type="number"] {
+  width: 60px;
+  padding: 0.125rem 0.25rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+}

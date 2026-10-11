@@ -3,125 +3,54 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Patchbay.js - Click to add</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Patchbay.js — Click to add</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .connector.clickable {
+        cursor: pointer;
+      }
+    </style>
   </head>
-  <body class="bg-gray-100 flex-col flex items-center space-y-12 h-screen py-6 px-4">
-    <div class="max-w-lg w-full mb-3">
-      <a href="../examples/index.html" class="text-blue-600 inline-block hover:underline mb-4">
-        &larr; Back to examples
-      </a>
-      <h1 class="mb-4 text-2xl font-bold">Click to add - Add ports by clicking on the patch bay</h1>
-      <p class="text-gray-500">
-        Using <code>startCableFromPoint()</code> we can start a cable from a specific point, and then connect it to
-        another point.
-      </p>
+  <body>
+    <div class="page-header">
+      <a class="back-link" href="index.html">&larr; Back to examples</a>
+      <h1>Click to add</h1>
+      <p>Drag from a port to create a cable, then release near another port to connect.</p>
     </div>
 
-    <div class="bg-zinc-900 w-full max-w-lg flex flex-col gap-4 p-4 rounded-lg shadow-md">
-      <!-- Upper side -->
-      <div class="grid grid-cols-6 gap-2">
-        <div
-          id="input-1"
-          class="cursor-pointer cable-connector bg-zinc-900 size-8 rounded-full border-2 border-zinc-600 flex items-center justify-center mx-auto"
-        >
-          <div class="bg-zinc-500 size-3 rounded-full"></div>
-        </div>
-        <div
-          id="input-2"
-          class="cursor-pointer cable-connector bg-zinc-900 size-8 rounded-full border-2 border-zinc-600 flex items-center justify-center mx-auto"
-        >
-          <div class="bg-zinc-500 size-3 rounded-full"></div>
-        </div>
-        <div
-          id="input-3"
-          class="cursor-pointer cable-connector bg-zinc-900 size-8 rounded-full border-2 border-zinc-600 flex items-center justify-center mx-auto"
-        >
-          <div class="bg-zinc-500 size-3 rounded-full"></div>
-        </div>
-        <div
-          id="input-4"
-          class="cursor-pointer cable-connector bg-zinc-900 size-8 rounded-full border-2 border-zinc-600 flex items-center justify-center mx-auto"
-        >
-          <div class="bg-zinc-500 size-3 rounded-full"></div>
-        </div>
-        <div
-          id="input-5"
-          class="cursor-pointer cable-connector bg-zinc-900 size-8 rounded-full border-2 border-zinc-600 flex items-center justify-center mx-auto"
-        >
-          <div class="bg-zinc-500 size-3 rounded-full"></div>
-        </div>
-        <div
-          id="input-6"
-          class="cursor-pointer cable-connector bg-zinc-900 size-8 rounded-full border-2 border-zinc-600 flex items-center justify-center mx-auto"
-        >
-          <div class="bg-zinc-500 size-3 rounded-full"></div>
-        </div>
+    <div class="panel">
+      <div class="port-grid">
+        <div id="input-1" class="connector cable-connector clickable"><div class="connector-inner"></div></div>
+        <div id="input-2" class="connector cable-connector clickable"><div class="connector-inner"></div></div>
+        <div id="input-3" class="connector cable-connector clickable"><div class="connector-inner"></div></div>
+        <div id="input-4" class="connector cable-connector clickable"><div class="connector-inner"></div></div>
+        <div id="input-5" class="connector cable-connector clickable"><div class="connector-inner"></div></div>
+        <div id="input-6" class="connector cable-connector clickable"><div class="connector-inner"></div></div>
       </div>
-      <hr class="border-zinc-800" />
-      <!-- Lower side -->
-      <div class="grid grid-cols-6 gap-2">
-        <div
-          id="output-1"
-          class="cursor-pointer cable-connector bg-zinc-900 size-8 rounded-full border-2 border-blue-600 flex items-center justify-center mx-auto"
-        >
-          <div class="bg-zinc-500 size-3 rounded-full"></div>
-        </div>
-        <div
-          id="output-2"
-          class="cursor-pointer cable-connector bg-zinc-900 size-8 rounded-full border-2 border-blue-600 flex items-center justify-center mx-auto"
-        >
-          <div class="bg-zinc-500 size-3 rounded-full"></div>
-        </div>
-        <div
-          id="output-3"
-          class="cursor-pointer cable-connector bg-zinc-900 size-8 rounded-full border-2 border-blue-600 flex items-center justify-center mx-auto"
-        >
-          <div class="bg-zinc-500 size-3 rounded-full"></div>
-        </div>
-        <div
-          id="output-4"
-          class="cursor-pointer cable-connector bg-zinc-900 size-8 rounded-full border-2 border-blue-600 flex items-center justify-center mx-auto"
-        >
-          <div class="bg-zinc-500 size-3 rounded-full"></div>
-        </div>
-        <div
-          id="output-5"
-          class="cursor-pointer cable-connector bg-zinc-900 size-8 rounded-full border-2 border-blue-600 flex items-center justify-center mx-auto"
-        >
-          <div class="bg-zinc-500 size-3 rounded-full"></div>
-        </div>
-        <div
-          id="output-6"
-          class="cursor-pointer cable-connector bg-zinc-900 size-8 rounded-full border-2 border-blue-600 flex items-center justify-center mx-auto"
-        >
-          <div class="bg-zinc-500 size-3 rounded-full"></div>
-        </div>
+      <hr class="panel-divider" />
+      <div class="port-grid">
+        <div id="output-1" class="connector blue cable-connector clickable"><div class="connector-inner"></div></div>
+        <div id="output-2" class="connector blue cable-connector clickable"><div class="connector-inner"></div></div>
+        <div id="output-3" class="connector blue cable-connector clickable"><div class="connector-inner"></div></div>
+        <div id="output-4" class="connector blue cable-connector clickable"><div class="connector-inner"></div></div>
+        <div id="output-5" class="connector blue cable-connector clickable"><div class="connector-inner"></div></div>
+        <div id="output-6" class="connector blue cable-connector clickable"><div class="connector-inner"></div></div>
       </div>
     </div>
 
     <script src="../dist/patchbay.umd.js"></script>
     <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const patchbay = new Patchbay({
-          container: document.body,
-          gravity: 2,
-          iterations: 5,
-          slack: 1.2,
-          segments: 20,
-          snapRadius: 100,
+      const patchbay = new Patchbay({ gravity: 2, slack: 1.2, snapRadius: 100 });
+
+      document.querySelectorAll(".connector").forEach((el) => {
+        el.addEventListener("mousedown", (event) => {
+          if (event.button !== 0) return;
+          event.preventDefault();
+          patchbay.startCable(el, { color: "#6468F0" });
         });
-
-        let connectorElements = document.querySelectorAll("div[id^='input-'], div[id^='output-']");
-
-        connectorElements.forEach((element) => {
-          element.addEventListener("click", (e) => {
-            patchbay.startCable(element, { color: "#6468F0" });
-          });
-        });
-
-        patchbay.start();
       });
+
+      patchbay.start();
     </script>
   </body>
 </html>

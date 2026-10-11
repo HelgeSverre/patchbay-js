@@ -3,264 +3,102 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Patchbay.js - Configurations</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Patchbay.js — Configurations</title>
+    <link rel="stylesheet" href="style.css" />
   </head>
-  <body class="bg-gray-100 flex-col flex items-center space-y-12 h-screen py-6 px-4">
-    <section class="max-w-lg w-full">
-      <a href="../examples/index.html" class="text-blue-600 inline-block hover:underline mb-4">
-        &larr; Back to examples
-      </a>
-      <div class="max-w-lg w-full mb-3">
-        <h2 class="mb-3 text-gray-700 text-2xl font-bold">Configuration</h2>
-        <p class="text-gray-500">
-          This example shows how all the configuration options of the library affect the behavior, appearance, and feel
-          of the patch bay.
-        </p>
-      </div>
-      <div class="bg-white p-4 rounded-lg border border-gray-300">
-        <form id="config-form" class="grid grid-cols-3 gap-4">
-          <div>
-            <label for="color" class="block text-sm font-medium text-gray-700">Cable Color</label>
-            <input
-              type="color"
-              id="color"
-              name="color"
-              value="#FF0000"
-              class="mt-1 block w-full rounded-md bg-white h-9 border border-gray-200"
-            />
-          </div>
-          <div>
-            <label for="gravity" class="block text-sm font-medium text-gray-700">Gravity</label>
-            <input
-              type="number"
-              id="gravity"
-              name="gravity"
-              value="1"
-              step="0.1"
-              class="mt-1 block w-full rounded-md bg-white py-1 px-2 border border-gray-200 h-9"
-            />
-          </div>
-          <div>
-            <label for="slack" class="block text-sm font-medium text-gray-700">Slack</label>
-            <input
-              type="number"
-              id="slack"
-              name="slack"
-              value="1.1"
-              step="0.1"
-              class="mt-1 block w-full rounded-md bg-white py-1 px-2 border border-gray-200 h-9"
-            />
-          </div>
-          <div>
-            <label for="lineThickness" class="block text-sm font-medium text-gray-700">Line Thickness</label>
-            <input
-              type="number"
-              id="lineThickness"
-              name="lineThickness"
-              value="2"
-              class="mt-1 block w-full rounded-md bg-white py-1 px-2 border border-gray-200 h-9"
-            />
-          </div>
-          <div>
-            <label for="iterations" class="block text-sm font-medium text-gray-700">Iterations</label>
-            <input
-              type="number"
-              id="iterations"
-              name="iterations"
-              value="5"
-              class="mt-1 block w-full rounded-md bg-white py-1 px-2 border border-gray-200 h-9"
-            />
-          </div>
-          <div>
-            <label for="segments" class="block text-sm font-medium text-gray-700">Segments</label>
-            <input
-              type="number"
-              id="segments"
-              name="segments"
-              value="20"
-              class="mt-1 block w-full rounded-md bg-white py-1 px-2 border border-gray-200 h-9"
-            />
-          </div>
-          <div>
-            <label for="dragHandleSize" class="block text-sm font-medium text-gray-700">Drag Handle Size</label>
-            <input
-              type="number"
-              id="dragHandleSize"
-              name="dragHandleSize"
-              value="20"
-              class="mt-1 block w-full rounded-md bg-white py-1 px-2 border border-gray-200 h-9"
-            />
-          </div>
-          <div>
-            <label for="snapRadius" class="block text-sm font-medium text-gray-700">Snap Radius</label>
-            <input
-              type="number"
-              id="snapRadius"
-              name="snapRadius"
-              value="100"
-              class="mt-1 block w-full rounded-md bg-white py-1 px-2 border border-gray-200 h-9"
-            />
-          </div>
-          <div class="col-span-full flex gap-2 justify-end mt-4">
-            <button
-              type="button"
-              id="move-cable"
-              class="bg-blue-600 text-sm text-white px-4 py-2 rounded-md hover:bg-blue-700 whitespace-nowrap"
-            >
-              Move Cable
-            </button>
+  <body>
+    <div style="max-width: 32rem; width: 100%">
+      <a class="back-link" href="index.html">&larr; Back to examples</a>
+      <h1>Configurator</h1>
+      <p style="color: #6b7280; margin-bottom: 1.5rem">Tweak params live and watch the cable change.</p>
+    </div>
 
-            <div class="w-full">
-              <!-- spacer -->
-            </div>
-
-            <button
-              type="button"
-              id="apply-config"
-              class="bg-blue-600 text-sm text-white px-4 py-2 rounded-md hover:bg-blue-700 whitespace-nowrap"
-            >
-              Apply Configuration
-            </button>
-          </div>
-        </form>
-      </div>
-    </section>
-
-    <section class="w-full max-w-lg">
-      <h2 class="mb-3 text-gray-700 text-2xl font-bold">Preview</h2>
-
-      <div class="bg-zinc-900 flex flex-col gap-4 p-4 rounded-lg shadow-md">
-        <!-- Upper side -->
-        <div class="grid grid-cols-6 gap-2">
-          <div
-            id="input-1"
-            class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-zinc-600 flex items-center justify-center mx-auto"
-          >
-            <div class="bg-zinc-500 size-3 rounded-full"></div>
-          </div>
-          <div
-            id="input-2"
-            class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-zinc-600 flex items-center justify-center mx-auto"
-          >
-            <div class="bg-zinc-500 size-3 rounded-full"></div>
-          </div>
-          <div
-            id="input-3"
-            class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-zinc-600 flex items-center justify-center mx-auto"
-          >
-            <div class="bg-zinc-500 size-3 rounded-full"></div>
-          </div>
-          <div
-            id="input-4"
-            class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-zinc-600 flex items-center justify-center mx-auto"
-          >
-            <div class="bg-zinc-500 size-3 rounded-full"></div>
-          </div>
-          <div
-            id="input-5"
-            class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-zinc-600 flex items-center justify-center mx-auto"
-          >
-            <div class="bg-zinc-500 size-3 rounded-full"></div>
-          </div>
-          <div
-            id="input-6"
-            class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-zinc-600 flex items-center justify-center mx-auto"
-          >
-            <div class="bg-zinc-500 size-3 rounded-full"></div>
-          </div>
+    <div class="form-card">
+      <form id="config-form" class="form-grid">
+        <div><label for="color">Color</label><input type="color" id="color" name="color" value="#FF0000" /></div>
+        <div>
+          <label for="gravity">Gravity</label><input type="number" id="gravity" name="gravity" value="1" step="0.1" />
         </div>
-        <hr class="border-zinc-800" />
-        <!-- Lower side -->
-        <div class="grid grid-cols-6 gap-2">
-          <div
-            id="output-1"
-            class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-blue-600 flex items-center justify-center mx-auto"
-          >
-            <div class="bg-zinc-500 size-3 rounded-full"></div>
-          </div>
-          <div
-            id="output-2"
-            class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-blue-600 flex items-center justify-center mx-auto"
-          >
-            <div class="bg-zinc-500 size-3 rounded-full"></div>
-          </div>
-          <div
-            id="output-3"
-            class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-blue-600 flex items-center justify-center mx-auto"
-          >
-            <div class="bg-zinc-500 size-3 rounded-full"></div>
-          </div>
-          <div
-            id="output-4"
-            class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-blue-600 flex items-center justify-center mx-auto"
-          >
-            <div class="bg-zinc-500 size-3 rounded-full"></div>
-          </div>
-          <div
-            id="output-5"
-            class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-blue-600 flex items-center justify-center mx-auto"
-          >
-            <div class="bg-zinc-500 size-3 rounded-full"></div>
-          </div>
-          <div
-            id="output-6"
-            class="cable-connector bg-zinc-900 size-8 rounded-full border-2 border-blue-600 flex items-center justify-center mx-auto"
-          >
-            <div class="bg-zinc-500 size-3 rounded-full"></div>
-          </div>
+        <div>
+          <label for="slack">Slack</label><input type="number" id="slack" name="slack" value="1.1" step="0.1" />
+        </div>
+        <div>
+          <label for="lineThickness">Thickness</label
+          ><input type="number" id="lineThickness" name="lineThickness" value="2" />
+        </div>
+        <div>
+          <label for="segments">Segments</label><input type="number" id="segments" name="segments" value="20" />
+        </div>
+        <div>
+          <label for="iterations">Iterations</label><input type="number" id="iterations" name="iterations" value="5" />
+        </div>
+        <div>
+          <label for="dragHandleSize">Handle size</label
+          ><input type="number" id="dragHandleSize" name="dragHandleSize" value="20" />
+        </div>
+        <div>
+          <label for="snapRadius">Snap radius</label
+          ><input type="number" id="snapRadius" name="snapRadius" value="100" />
+        </div>
+
+        <div class="form-actions">
+          <button type="button" id="move-cable" class="btn">Random port</button>
+          <div class="flex-spacer"></div>
+          <button type="button" id="apply-config" class="btn">Apply</button>
+        </div>
+      </form>
+    </div>
+
+    <div style="max-width: 32rem; width: 100%">
+      <h2>Preview</h2>
+      <div class="panel">
+        <div class="port-grid">
+          <div id="input-1" class="connector cable-connector"><div class="connector-inner"></div></div>
+          <div id="input-2" class="connector cable-connector"><div class="connector-inner"></div></div>
+          <div id="input-3" class="connector cable-connector"><div class="connector-inner"></div></div>
+          <div id="input-4" class="connector cable-connector"><div class="connector-inner"></div></div>
+          <div id="input-5" class="connector cable-connector"><div class="connector-inner"></div></div>
+          <div id="input-6" class="connector cable-connector"><div class="connector-inner"></div></div>
+        </div>
+        <hr class="panel-divider" />
+        <div class="port-grid">
+          <div id="output-1" class="connector blue cable-connector"><div class="connector-inner"></div></div>
+          <div id="output-2" class="connector blue cable-connector"><div class="connector-inner"></div></div>
+          <div id="output-3" class="connector blue cable-connector"><div class="connector-inner"></div></div>
+          <div id="output-4" class="connector blue cable-connector"><div class="connector-inner"></div></div>
+          <div id="output-5" class="connector blue cable-connector"><div class="connector-inner"></div></div>
+          <div id="output-6" class="connector blue cable-connector"><div class="connector-inner"></div></div>
         </div>
       </div>
-    </section>
+    </div>
 
     <script src="../dist/patchbay.umd.js"></script>
     <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const patchbay = new Patchbay({
-          color: "#FF0000", // Default color
+      const patchbay = new Patchbay({ color: "#FF0000" });
+      const start = document.getElementById("input-1");
+      const end = document.getElementById("output-6");
+      let cable = patchbay.connect(start, end);
+      patchbay.start();
+
+      document.getElementById("apply-config").addEventListener("click", () => {
+        const fd = new FormData(document.getElementById("config-form"));
+        patchbay.clear();
+        Object.assign(patchbay.config, {
+          color: fd.get("color"),
+          gravity: parseFloat(fd.get("gravity")),
+          slack: parseFloat(fd.get("slack")),
+          lineThickness: parseFloat(fd.get("lineThickness")),
+          segments: parseInt(fd.get("segments")),
+          iterations: parseInt(fd.get("iterations")),
+          dragHandleSize: parseInt(fd.get("dragHandleSize")),
+          snapRadius: parseInt(fd.get("snapRadius")),
         });
+        cable = patchbay.connect(start, end);
+      });
 
-        const start = document.getElementById("input-1");
-        const end = document.getElementById("output-6");
-
-        let cable = patchbay.connect(start, end);
-        patchbay.start();
-
-        document.getElementById("apply-config").addEventListener("click", function () {
-          const form = document.getElementById("config-form");
-          const formData = new FormData(form);
-
-          const color = formData.get("color");
-          const gravity = parseFloat(formData.get("gravity"));
-          const slack = parseFloat(formData.get("slack"));
-          const lineThickness = parseFloat(formData.get("lineThickness"));
-          const segments = parseInt(formData.get("segments"));
-          const dragHandleSize = parseInt(formData.get("dragHandleSize"));
-          const iterations = parseInt(formData.get("iterations"));
-          const snapRadius = parseInt(formData.get("snapRadius"));
-
-          patchbay.clear();
-
-          // Override the configuration
-          patchbay.config = Object.assign(patchbay.config, {
-            color,
-            gravity,
-            iterations,
-            slack,
-            lineThickness,
-            segments,
-            dragHandleSize,
-            snapRadius,
-          });
-
-          cable = patchbay.connect(start, end);
-        });
-
-        // Randomly move the "end" to a different slot on the lower side
-        document.getElementById("move-cable").addEventListener("click", function () {
-          const outputs = document.querySelectorAll("div[id^='output-']");
-          cable.end = outputs[Math.floor(Math.random() * outputs.length)];
-        });
+      document.getElementById("move-cable").addEventListener("click", () => {
+        const outputs = document.querySelectorAll("[id^='output-']");
+        cable.end = outputs[Math.floor(Math.random() * outputs.length)];
       });
     </script>
   </body>

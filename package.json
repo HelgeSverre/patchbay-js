@@ -28,23 +28,37 @@
   "exports": {
     ".": {
       "import": "./dist/patchbay.es.js",
-      "require": "./dist/patchbay.cjs.js",
-      "umd": "./dist/patchbay.umd.js"
+      "require": "./dist/patchbay.cjs"
     }
   },
-  "main": "./dist/patchbay.cjs.js",
+  "main": "./dist/patchbay.cjs",
   "unpkg": "./dist/patchbay.umd.js",
   "module": "./dist/patchbay.es.js",
+  "files": [
+    "art",
+    "dist",
+    "src",
+    "examples",
+    "CHANGELOG.md",
+    "LICENSE.md"
+  ],
   "scripts": {
     "build": "vite build",
     "dev": "vite",
     "format": "npx prettier --write src examples",
     "preview": "vite preview",
     "sort": "npx sort-package-json",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:e2e": "npm run build && playwright test",
+    "test:package": "npm run build && node scripts/verify-package.mjs",
+    "test:headed": "vitest run --config vitest.headed.config.js"
   },
   "devDependencies": {
-    "prettier": "^3.3.3",
-    "vite": "^4.3.9"
+    "@playwright/test": "^1.62.1",
+    "@vitest/browser-playwright": "^4.1.11",
+    "playwright": "^1.62.1",
+    "prettier": "^3.9.6",
+    "vite": "^6.4.3",
+    "vitest": "^4.1.11"
   }
 }

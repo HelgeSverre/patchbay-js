@@ -7,7 +7,7 @@ export default defineConfig({
       entry: path.resolve(__dirname, "src/index.js"),
       name: "Patchbay",
       formats: ["es", "umd", "cjs"],
-      fileName: (format) => `patchbay.${format}.js`,
+      fileName: (format) => (format === "cjs" ? "patchbay.cjs" : `patchbay.${format}.js`),
     },
     rollupOptions: {
       output: {
