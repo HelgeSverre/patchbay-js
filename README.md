@@ -1,18 +1,12 @@
 # Patchbay.js
 
-[![NPM](https://img.shields.io/npm/v/patchbay.js)](https://www.npmjs.com/package/patchbay.js)
-![NPM Downloads](https://img.shields.io/npm/dw/patchbay.js)
-
-![GitHub Issues](https://img.shields.io/github/issues/helgesverre/patchbay-js)
-![NPM License](https://img.shields.io/npm/l/patchbay.js)
+[![npm version](https://img.shields.io/npm/v/patchbay.js)](https://www.npmjs.com/package/patchbay.js) [![npm downloads](https://img.shields.io/npm/dw/patchbay.js)](https://www.npmjs.com/package/patchbay.js) [![GitHub issues](https://img.shields.io/github/issues/helgesverre/patchbay-js)](https://github.com/HelgeSverre/patchbay-js/issues) [![License](https://img.shields.io/npm/l/patchbay.js)](./LICENSE.md)
 
 ![Patchbay.js](./art/demo.gif)
 
-JavaScript library for creating interactive physics-based rope simulations connected to DOM
-elements.
+A JavaScript library for interactive, physics-based cables connecting DOM elements.
 
-Inspired
-by [Reason Studio's Rack](https://www.reasonstudios.com/rack#:~:text=hear%20what%20happens.-,FLIP%20THE%20RACK,-Scary%20to%20some) ([Video](https://www.reasonstudios.com/videos/Flip-the-rack.mp4)).
+Inspired by [Reason Studio's Rack](https://www.reasonstudios.com/rack) ([video](https://www.reasonstudios.com/videos/Flip-the-rack.mp4)).
 
 ## Installation
 

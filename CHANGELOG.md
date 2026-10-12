@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-12
+
 ### Added
 
 - Unit and regression tests with Vitest browser mode using Playwright in Chromium, Firefox, and WebKit
@@ -52,6 +54,7 @@
 - Drag-to-create example anchors to the source port and avoids creating a second cable on release
 - Stress controls apply changed gravity/iterations, report actual segment counts, and clear pending selections
 - Generated profiles and test artifacts are excluded from Git and npm packages
+- README badges share one row and link to their corresponding resources
 
 ### Removed
 
